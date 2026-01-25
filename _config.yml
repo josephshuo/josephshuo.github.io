@@ -58,7 +58,7 @@ plugins:
 author:
   name   : "First Lastname"
   avatar : "/assets/images/Godot_Portait.png"
-  bio    : "My awesome biography constrained to a sentence or two goes here."
+  bio    : " 分享一些物理和数学的小研究和科普知识。"
   links:
     - label: "Website"
       icon: "fas fa-fw fa-link"
