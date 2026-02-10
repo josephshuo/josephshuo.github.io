@@ -57,7 +57,7 @@ plugins:
 
 author:
   name   : "First Lastname"
-  avatar : "/assets/images/Godot_Portait.png"
+  avatar : "/assets/images/Godot_Portrait.png"
   bio    : " 分享一些物理和数学的小研究和科普知识。"
   links:
     - label: "Website"
