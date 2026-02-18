@@ -18,7 +18,7 @@
 ##############################
 text_skin: dark # "default" (default), "dark", "forest", "ocean", "chocolate", "orange"
 highlight_theme: default # "default" (default), "tomorrow", "tomorrow-night", "tomorrow-night-eighties", "tomorrow-night-blue", "tomorrow-night-bright"
-url:    https://www.josephshuo.com: # the base hostname & protocol for your site e.g. 
+url:    https://www.josephshuo.com # the base hostname & protocol for your site e.g. 
 baseurl : # does not include hostname
 title   : 硕的个人博客
 description: > # this means to ignore newlines until "Language & timezone"
