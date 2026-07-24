@@ -474,6 +474,53 @@ def plot_fields(X, Y, A, Bmag, core_mask, pri_mask, sec_mask,
     return fig
 
 
+def plot_sweep(sweep):
+    """参数扫描图: 证明漏磁通绝对值与 μr 无关"""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5.5))
+
+    mur = sweep['mu_r']
+    phi_c = sweep['phi_core']
+    phi_w = sweep['phi_window']
+
+    # 左图: 磁通绝对值 vs μr
+    ax1.semilogx(mur, phi_c, 'o-', color='#2ecc71', linewidth=2, markersize=8,
+                 label='Core flux Φ_core (mutual)')
+    ax1.semilogx(mur, phi_w, 's-', color='#e74c3c', linewidth=2, markersize=8,
+                 label='Window flux Φ_window (leakage)')
+    ax1.set_xlabel('Core relative permeability μr', fontsize=11)
+    ax1.set_ylabel('Flux per unit depth (mWb/m)', fontsize=11)
+    ax1.set_title('Absolute fluxes vs μr\n(Φ_window is flat — purely geometric!)',
+                  fontsize=13, fontweight='bold')
+    ax1.legend(fontsize=10)
+    ax1.grid(True, alpha=0.3)
+
+    # 标注关键结论
+    ax1.annotate('Φ_window ≈ constant\n(geometry-limited)',
+                xy=(mur[3], phi_w[3]), xytext=(mur[1], phi_w[3] * 1.5),
+                fontsize=9, color='#e74c3c', fontweight='bold',
+                arrowprops=dict(arrowstyle='->', color='#e74c3c', lw=1.5))
+    ax1.annotate('Φ_core ∝ μr\n(core-limited)',
+                xy=(mur[5], phi_c[5]), xytext=(mur[3], phi_c[5] * 0.6),
+                fontsize=9, color='#2ecc71', fontweight='bold',
+                arrowprops=dict(arrowstyle='->', color='#2ecc71', lw=1.5))
+
+    # 右图: 漏磁比例 vs μr
+    ax2.loglog(mur, sweep['leak_pct'], 'D-', color='#8e44ad', linewidth=2, markersize=8)
+    ax2.set_xlabel('Core relative permeability μr', fontsize=11)
+    ax2.set_ylabel('Leakage ratio (%)', fontsize=11)
+    ax2.set_title('Leakage % vs μr\n(% drops as 1/μr because core flux rises)',
+                  fontsize=13, fontweight='bold')
+    ax2.grid(True, alpha=0.3)
+
+    # 标注
+    for i, (m, p) in enumerate(zip(mur, sweep['leak_pct'])):
+        ax2.annotate(f'{p:.1f}%', (m, p), textcoords="offset points",
+                    xytext=(0, 10), fontsize=8, ha='center', color='#8e44ad')
+
+    fig.tight_layout()
+    return fig
+
+
 def plot_summary(mag, leak_a, leak_b):
     """汇总对比图"""
     fig, ax = plt.subplots(figsize=(10, 5.5))
@@ -583,7 +630,24 @@ def main():
     res_b = run_config("Config B: Windings on same leg (concentric, min leakage)",
                        'left', 'left', 'both', 'both')
 
-    # --- 可视化 ---
+    # --- 参数扫描: 改变 μr，观察 Φ_core vs Φ_window ---
+    print("\n[Parameter Sweep: vary mu_r, measure leakage fluxes]")
+    mur_values = [100, 200, 500, 1000, 2000, 5000, 10000]
+    sweep = {'mu_r': [], 'phi_core': [], 'phi_window': [], 'leak_pct': []}
+
+    global MU_R_CORE
+    _mu_saved = MU_R_CORE
+    for mur in mur_values:
+        MU_R_CORE = mur
+        print(f"  mu_r = {mur} ...", end=" ", flush=True)
+        res = run_config(f"mu_r={mur}", 'left', 'right', 'both', 'both')
+        sweep['mu_r'].append(mur)
+        sweep['phi_core'].append(res['leak']['phi_core'] * 1e3)    # mWb/m
+        sweep['phi_window'].append(res['leak']['phi_window'] * 1e3)
+        sweep['leak_pct'].append(res['leak']['leakage_pct'])
+    MU_R_CORE = _mu_saved  # restore
+
+    # --- 所有可视化 ---
     print("\n[Generating plots...]")
 
     fig1 = plot_geometry(res_a['X'], res_a['Y'], res_a['core'],
@@ -599,6 +663,8 @@ def main():
                        res_b['leak'], mag, res_b['label'])
 
     fig5 = plot_summary(mag, res_a['leak'], res_b['leak'])
+
+    fig6 = plot_sweep(sweep)
 
     plt.show()
 
